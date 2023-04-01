@@ -8,16 +8,73 @@ import (
 	"context"
 	"fmt"
 	"go-graphql-api/graph/model"
+	"time"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// CreatePost is the resolver for the CreatePost field.
+func (r *mutationResolver) CreatePost(ctx context.Context, input model.NewPost) (*model.Post, error) {
+	// panic(fmt.Errorf("not implemented: CreatePost - CreatePost"))
+	Addpost := model.Post{
+		Title:       input.Title,
+		Content:     input.Content,
+		Author:      *input.Author,
+		Hero:        *input.Hero,
+		PublishedAt: time.Now().Format("20-08-2022"),
+		UpdatedAt:   time.Now().Format("20-08-2022"),
+	}
+
+	if err := r.Database.Create(&Addpost).Error; err != nil {
+		fmt.Println(err)
+		return nil, err
+
+	}
+
+	return &Addpost, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// UpdatePost is the resolver for the UpdatePost field.
+func (r *mutationResolver) UpdatePost(ctx context.Context, postID int, input *model.NewPost) (*model.Post, error) {
+	// panic(fmt.Errorf("not implemented: UpdatePost - UpdatePost"))
+	Updatepost := model.Post{
+		Title:     input.Title,
+		Content:   input.Content,
+		UpdatedAt: time.Now().Format("20-08-2022"),
+	}
+
+	if err := r.Database.Model(&model.Post{}).Where("id=?", postID).Updates(&Updatepost).Error; err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	Updatepost.ID = postID
+	return &Updatepost, nil
+}
+
+// GetAllPosts is the resolver for the GetAllPosts field.
+func (r *queryResolver) GetAllPosts(ctx context.Context) ([]*model.Post, error) {
+	// panic(fmt.Errorf("not implemented: GetAllPosts - GetAllPosts"))
+	posts := []*model.Post{}
+
+	GetPosts := r.Database.Model(&posts).Find(&posts)
+
+	if GetPosts.Error != nil {
+		fmt.Println(GetPosts.Error)
+		return nil, GetPosts.Error
+	}
+	return posts, nil
+}
+
+// GetOnePost is the resolver for the GetOnePost field.
+func (r *queryResolver) GetOnePost(ctx context.Context, id int) (*model.Post, error) {
+	// panic(fmt.Errorf("not implemented: GetOnePost - GetOnePost"))
+	post := model.Post{}
+
+	if err := r.Database.Find(&post, id).Error; err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return &post, nil
 }
 
 // Mutation returns MutationResolver implementation.
